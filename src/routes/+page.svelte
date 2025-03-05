@@ -7,10 +7,11 @@
 	interface Character {
 		name: string;
 		image: string;
+		description: string;
 	}
 
-	let char1: Character | null = $state(null);
-	let char2: Character | null = $state(null);
+	let char1: Character = $state({name: "", image: "", description: ""});
+	let char2: Character = $state({name: "", image: "", description: ""});
 
 	let loading = $state(false);
 	let apiKey = $state('');
@@ -35,15 +36,9 @@
 				const image = event.target?.result as string;
 				if (image) {
 					if (character === 1) {
-						char1 = {
-							name: char1?.name || '',
-							image
-						};
+						char1.image = image
 					} else {
-						char2 = {
-							name: char2?.name || '',
-							image
-						};
+						char2.image = image
 					}
 				}
 			};
@@ -60,15 +55,17 @@
 
 	function handleNameChange(event: Event, character: number) {
 		if (character === 1) {
-			char1 = {
-				name: (event.target as HTMLInputElement).value,
-				image: char1?.image || ''
-			};
+			char1.name = (event.target as HTMLInputElement).value
 		} else {
-			char2 = {
-				name: (event.target as HTMLInputElement).value,
-				image: char2?.image || ''
-			};
+			char2.name = (event.target as HTMLInputElement).value
+		}
+	}
+
+	function handleDescriptionChange(event: Event, character: number) {
+		if (character === 1) {
+			char1.description = (event.target as HTMLInputElement).value
+		} else {
+			char2.description = (event.target as HTMLInputElement).value
 		}
 	}
 
@@ -122,7 +119,9 @@
 					inlineData: dataUrltoInlineData(char2?.image as string)
 				},
 				{
-					text: `Character 1: ${char1?.name}; Character 2: ${char2?.name}`
+					text: `Character 1: ${char1?.name} and description: ${char1?.description}; 
+					Character 2: ${char2?.name} and description: ${char2?.description}
+					`
 				}
 			]);
 		} catch (e: any) {
@@ -204,6 +203,7 @@
 			<div class="flex flex-col items-center justify-center gap-2.5">
 				<img class="h-32 w-32" src={char1?.image} alt={char1?.name} />
 				<Input type="text" placeholder="name" onchange={(e) => handleNameChange(e, 1)} />
+				<Input type="text" placeholder="description" onchange={(e) => handleDescriptionChange(e, 1)} />
 				<Input onchange={(e) => handleFileSelect(e, 1)} placeholder="guy" type="file" />
 			</div>
 
@@ -212,6 +212,7 @@
 			<div class="flex flex-col items-center justify-center gap-2.5">
 				<img class="h-32 w-32" src={char2?.image} alt={char2?.name} />
 				<Input type="text" placeholder="name" onchange={(e) => handleNameChange(e, 2)} />
+				<Input type="text" placeholder="description" onchange={(e) => handleDescriptionChange(e, 2)} />
 				<Input onchange={(e) => handleFileSelect(e, 2)} placeholder="guy" type="file" />
 			</div>
 		</div>
