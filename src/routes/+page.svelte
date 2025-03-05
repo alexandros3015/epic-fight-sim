@@ -51,6 +51,13 @@
 		}
 	}
 
+	function dataUrltoInlineData(dataUrl: string) {
+		return {
+			data: dataUrl.split(',')[1],
+			mimeType: dataUrl.split(',')[0].split(':')[1].split(';')[0]
+		};
+	}
+
 	function handleNameChange(event: Event, character: number) {
 		if (character === 1) {
 			char1 = {
@@ -104,7 +111,26 @@
 			}
 		});
 
-		let result = await chat.sendMessage(`Character 1: ${char1?.name}; Character 2: ${char2?.name}`);
+		let result;
+
+		try {
+			result = await chat.sendMessage([
+				{
+					inlineData: dataUrltoInlineData(char1?.image as string)
+				},
+				{
+					inlineData: dataUrltoInlineData(char2?.image as string)
+				},
+				{
+					text: `Character 1: ${char1?.name}; Character 2: ${char2?.name}`
+				}
+			]);
+		} catch (e: any) {
+			alert(e.toString());
+			loading = false;
+		}
+
+		if (!result) return;
 
 		let steps: { steps: { statistic: string; winner: number }[] } = JSON.parse(
 			result.response.text()
