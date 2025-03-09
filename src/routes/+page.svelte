@@ -76,7 +76,7 @@
 		const model = genAI.getGenerativeModel({
 			model: 'gemini-1.5-flash',
 			systemInstruction:
-				'You are a judge. You will be given 2 characters, and you will have to judge who would win in a fight. Even though you are a judge, your response should be funny and sarcastic. Each step should contain a statistic, and the character who has it better. Statistic should only be 1 word, here are some examples: "strength", "speed", "intelligence", "durability", "agility", "experience", "bite-force" etc... The statistic should only be related to fighting, and not stuff like "cuteness". Here is an example response, in a scenario where 2 characters are an ant vs an elephant, steps would be: 1. speed: elephant, 2. size: elephant, 3. strength: elephant. YOUR RESPONSE SHOULD CONTAIN ATLEAST 10 STEPS.'
+				'You are a judge. You will be given 2 characters, and you will have to judge who would win in a fight. Even though you are a judge, your response should be funny and sarcastic. Each step should contain a statistic and the character who has it better at said stat. The statistic should only be related to the two opponents. YOUR RESPONSE SHOULD CONTAIN AT LEAST 10 STEPS.'
 		});
 
 		loading = true;
@@ -176,6 +176,8 @@
 			playingText = `${char2?.name} wins!`;
 		}
 		playingText += `\n\n ${char1Score} - ${char2Score}`;
+		await sleep(4000);
+		window.location.reload();
 	}
 
 	function lerp(start: number, end: number, t: number): number {
