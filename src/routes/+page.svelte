@@ -5,13 +5,17 @@
 	import { onMount } from 'svelte';
 
 	interface Character {
+		id: number;
 		name: string;
 		image: string;
 		description: string;
 	}
 
-	let char1: Character = $state({name: "", image: "", description: ""});
-	let char2: Character = $state({name: "", image: "", description: ""});
+	// List of characters to fight.
+	let characters: Character[] = $state([
+		{ id: 1, name: "", image: "", description: "" },
+		{ id: 2, name: "", image: "", description: "" }
+	]);
 
 	let loading = $state(false);
 	let apiKey = $state('');
@@ -30,16 +34,13 @@
 
 	function handleFileSelect(event: Event, character: number) {
 		const file = (event.target as HTMLInputElement).files?.[0];
+		const selectedCharacter = characters.find(c => c.id === character);
 		if (file) {
 			const reader = new FileReader();
 			reader.onload = (event) => {
 				const image = event.target?.result as string;
-				if (image) {
-					if (character === 1) {
-						char1.image = image
-					} else {
-						char2.image = image
-					}
+				if (image && selectedCharacter) {
+					selectedCharacter.image = image;
 				}
 			};
 			reader.readAsDataURL(file);
@@ -54,18 +55,16 @@
 	}
 
 	function handleNameChange(event: Event, character: number) {
-		if (character === 1) {
-			char1.name = (event.target as HTMLInputElement).value
-		} else {
-			char2.name = (event.target as HTMLInputElement).value
+		const selectedCharacter = characters.find(c => c.id === character);
+		if (selectedCharacter) {
+			selectedCharacter.name = (event.target as HTMLInputElement).value;
 		}
 	}
 
 	function handleDescriptionChange(event: Event, character: number) {
-		if (character === 1) {
-			char1.description = (event.target as HTMLInputElement).value
-		} else {
-			char2.description = (event.target as HTMLInputElement).value
+		const selectedCharacter = characters.find(c => c.id === character);
+		if (selectedCharacter) {
+			selectedCharacter.description = (event.target as HTMLInputElement).value;
 		}
 	}
 
@@ -111,13 +110,18 @@
 		let result;
 
 		try {
+
 			result = await chat.sendMessage([
-				{
-					inlineData: dataUrltoInlineData(char1?.image as string)
-				},
-				{
-					inlineData: dataUrltoInlineData(char2?.image as string)
-				},
+				...characters.map((character)=>{
+					return {
+						inlineData: dataUrltoInlineData(character.image as string)
+					}
+				}),
+				...characters.map((character, index)=>{
+					return {
+						text:`Character ${index + 1}: ${character.name}; Description: ${character.description};\n`
+					}
+				})
 				{
 					text: `Character 1: ${char1?.name} and description: ${char1?.description}; 
 					Character 2: ${char2?.name} and description: ${char2?.description}
@@ -201,29 +205,32 @@
 
 {#if !playing}
 	<div class="flex h-screen w-full flex-col items-center justify-center">
-		<div class="mb-5 flex flex-row items-center justify-center gap-2.5">
-			<div class="flex flex-col items-center justify-center gap-2.5">
-				<img class="h-32 w-32" src={char1?.image} alt={char1?.name} />
-				<Input type="text" placeholder="name" onchange={(e) => handleNameChange(e, 1)} />
-				<Input type="text" placeholder="description" onchange={(e) => handleDescriptionChange(e, 1)} />
-				<Input onchange={(e) => handleFileSelect(e, 1)} placeholder="guy" type="file" />
+		
+		{#each characters as character, index}
+			<div class="mb-5 flex flex-row items-center justify-center gap-2.5">
+				<div class="flex flex-col items-center justify-center gap-2.5">
+					<img class="h-32 w-32" src={character.image} alt={character.name} />
+					<Input type="text" placeholder="name" onchange={(e) => handleNameChange(e, index + 1)} />
+					<Input type="text" placeholder="description" onchange={(e) => handleDescriptionChange(e, index + 1)} />
+					<Input onchange={(e) => handleFileSelect(e, index + 1)} placeholder="guy" type="file" />
+				</div>
+	
+				<img src="/versus.png" alt="versus" class="h-16 w-16" />
+	
+				<div class="flex flex-col items-center justify-center gap-2.5">
+					<img class="h-32 w-32" src={characters[index === 0 ? 1 : 0].image} alt={characters[index === 0 ? 1 : 0].name} />		
+					<Input type="text" placeholder="name" onchange={(e) => handleNameChange(e, index === 0 ? 1 : 0)} />
+					<Input type="text" placeholder="description" onchange={(e) => handleDescriptionChange(e, index === 0 ? 1 : 0)} />
+					<Input onchange={(e) => handleFileSelect(e, index === 0 ? 1 : 0)} placeholder="guy" type="file" />
+				</div>
 			</div>
-
-			<img src="/versus.png" alt="versus" class="h-16 w-16" />
-
-			<div class="flex flex-col items-center justify-center gap-2.5">
-				<img class="h-32 w-32" src={char2?.image} alt={char2?.name} />
-				<Input type="text" placeholder="name" onchange={(e) => handleNameChange(e, 2)} />
-				<Input type="text" placeholder="description" onchange={(e) => handleDescriptionChange(e, 2)} />
-				<Input onchange={(e) => handleFileSelect(e, 2)} placeholder="guy" type="file" />
-			</div>
-		</div>
-
-		<Button onclick={generateFight} disabled={!char1 || !char2 || loading || !apiKey}
-			>Generate Fight</Button
-		>
+		{/each}
+		
 		<Input class="mt-2.5 w-64" type="password" placeholder="api key" bind:value={apiKey} />
 	</div>
+	<Button onclick={generateFight} disabled={loading || !apiKey}
+			>Generate Fight</Button
+	>
 {:else}
 	<div
 		class="flex h-screen w-full flex-row items-center justify-center"
